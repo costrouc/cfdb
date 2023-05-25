@@ -28,6 +28,7 @@ class BuildArtifactAbout(Base):
     license: str = None
     license_family: str = None
     license_file: typing.Union[str, list[str]] = None
+    license_url: str = None # ignored currently
     root_pkgs: list[typing.Any] = []
     summary: str = None
     tags: list[str] = []
