@@ -170,9 +170,6 @@ if __name__ == "__main__":
     directory = sys.argv[1]
 
     for i, path in enumerate(pathlib.Path(directory).glob("artifacts/*/*/*/*.json")):
-        if i > 1000:
-            break
-
         package_name, channel, subdir, filename = path.parts[-4:]
 
         total_size += path.stat().st_size

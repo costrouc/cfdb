@@ -40,7 +40,7 @@ class BuildArtifactIndex(Base):
     depends: list[str] = []
     constrains: list[str] = []
     features: str = None
-    license: str
+    license: str = None
     license_family: str = None
     name: str
     noarch: str = None
