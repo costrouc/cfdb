@@ -53,7 +53,7 @@ class BuildArtifactIndex(Base):
 class BuildArtifact(Base):
     about: BuildArtifactAbout
     conda_build_config: typing.Any
-    conda_pkg_format: str # ignored currently
+    conda_pkg_format: str = None # ignored currently
     files: list[str]
     index: BuildArtifactIndex
     metadata_version: int
