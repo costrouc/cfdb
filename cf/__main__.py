@@ -171,7 +171,7 @@ if __name__ == "__main__":
     directory = sys.argv[1]
 
     paths = tqdm(list(pathlib.Path(directory).glob("artifacts/*/*/*/*.json")))
-    for i, path in enumarate(paths):
+    for i, path in enumerate(paths):
         package_name, channel, subdir, filename = path.parts[-4:]
 
         total_size += path.stat().st_size
