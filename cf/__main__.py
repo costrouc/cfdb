@@ -82,7 +82,7 @@ def store_build_artifact(session, build_artifact_channel: str, build_artifact: s
         orm.BuildArtifactIndex.version == build_artifact.index.version,
         orm.BuildArtifactIndex.build == build_artifact.index.build,
     ).first() is not None:
-        print(f'SKIPPING {build_artifact_channel}/{build_artifact.index.subdir}/{build_artifact.index.name}-{build_artifact.index.version}-{build_artifact.index.build}')
+        # print(f'SKIPPING {build_artifact_channel}/{build_artifact.index.subdir}/{build_artifact.index.name}-{build_artifact.index.version}-{build_artifact.index.build}')
         return
 
     channels = []
@@ -175,8 +175,8 @@ if __name__ == "__main__":
 
         total_size += path.stat().st_size
         database_size = pathlib.Path(database_filename).stat().st_size
-        print(f'PROCESSING {path}')
-        print(f'Efficiency {database_size / total_size:0.2f} [%] Database {database_size // 1024**2} [MB] Files {total_size // 1024**2} [MB]')
+        # print(f'PROCESSING {path}')
+        # print(f'Efficiency {database_size / total_size:0.2f} [%] Database {database_size // 1024**2} [MB] Files {total_size // 1024**2} [MB]')
         with path.open() as f:
             build_artifact = schema.BuildArtifact.parse_obj(json.load(f))
         store_build_artifact(session, channel, build_artifact)
