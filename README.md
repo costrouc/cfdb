@@ -20,3 +20,19 @@ LICENSE........................................... 2            0.053%
 MAINTAINER........................................ 2            0.053% 
 SQLITE_SCHEMA..................................... 1            0.027% 
 ```
+
+# Usage
+
+1. Download the latest of https://github.com/regro/libcfgraph as a
+zip/tar.gz. Note this is on the order of GBs.
+
+2. Unpack the archive in the current directory.
+
+3. Run `python -m cf`
+
+A database named `database.sqlite` will be created in the current
+directory. Currently if you `du -sh artifacts` the database will be
+around 70-80% of that size.
+
+
+

@@ -166,7 +166,7 @@ if __name__ == "__main__":
     total_size = 0
     database_size = 0
 
-    for i, path in enumerate(pathlib.Path(".").glob("*/artifacts/**/*.json")):
+    for i, path in enumerate(pathlib.Path(".").glob("*/artifacts/*/*/*/*.json")):
         if i > 1000:
             break
 
