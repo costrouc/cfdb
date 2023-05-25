@@ -170,13 +170,16 @@ if __name__ == "__main__":
 
     directory = sys.argv[1]
 
-    for i, path in tqdm(enumerate(pathlib.Path(directory).glob("artifacts/*/*/*/*.json"))):
+    paths = tqdm(enumerate(pathlib.Path(directory).glob("artifacts/*/*/*/*.json")))
+    for i, path in paths:
         package_name, channel, subdir, filename = path.parts[-4:]
 
         total_size += path.stat().st_size
         database_size = pathlib.Path(database_filename).stat().st_size
-        # print(f'PROCESSING {path}')
-        # print(f'Efficiency {database_size / total_size:0.2f} [%] Database {database_size // 1024**2} [MB] Files {total_size // 1024**2} [MB]')
+
+        paths.set_description(f'Efficiency {database_size / total_size:0.2f} [%] Database {database_size // 1024**2} [MB] Files {total_size // 1024**2} [MB]')
+        paths.refresh()
+
         with path.open() as f:
             build_artifact = schema.BuildArtifact.parse_obj(json.load(f))
         store_build_artifact(session, channel, build_artifact)
