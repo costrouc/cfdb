@@ -47,14 +47,25 @@ class License(Base):
     __tablename__ = "license"
 
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode, unique=True, index=True)
+    name = Column(Unicode, unique=True)
 
 
-class Filename(Base):
-    __tablename__ = "filename"
+class INode(Base):
+    __tablename__ = "inode"
+    __table_args__ = (
+        UniqueConstraint('parent_id', 'name'),
+    )
 
     id = Column(Integer, primary_key=True)
-    name = Column(Unicode, unique=True, index=True)
+    parent_id = Column(Integer, ForeignKey("inode.id"), nullable=True)
+    name = Column(Unicode)
+
+
+class INodeMetadata(Base):
+    __tablename__ = "inodemetadata"
+
+    inode_id = Column(Integer, ForeignKey("inode.id"), primary_key=True)
+    buildartifact_id = Column(Integer, ForeignKey("buildartifact.id"), primary_key=True)
 
 
 class EnvironmentVariable(Base):
@@ -103,20 +114,6 @@ buildartifact_environmentvariable = Table(
     ),
 )
 
-buildartifact_filename = Table(
-    "buildartifact_filename",
-    Base.metadata,
-    Column(
-        "buildartifact_id",
-        ForeignKey("buildartifact.id"),
-        primary_key=True,
-    ),
-    Column(
-        "buildartifact_filename",
-        ForeignKey("filename.id"),
-        primary_key=True
-    )
-)
 
 class BuildArtifactIndex(Base):
     __tablename__ = "buildartifactindex"
@@ -143,6 +140,8 @@ class BuildArtifact(Base):
     __tablename__  = "buildartifact"
 
     id = Column(Integer, primary_key=True)
+    channel_id = Column(Integer, ForeignKey("channel.id"), nullable=False)
+    channel = relationship(Channel)
 
     ### ABOUT ###
 
@@ -179,7 +178,7 @@ class BuildArtifact(Base):
 
     conda_build_config = Column(JSON)
 
-    files = relationship(Filename, secondary=buildartifact_filename)
+    files = relationship(INodeMetadata)
 
     index_id = Column(Integer, ForeignKey("buildartifactindex.id"), nullable=False)
     index = relationship(BuildArtifactIndex)
