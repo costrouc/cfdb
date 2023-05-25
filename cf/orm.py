@@ -1,12 +1,17 @@
+import zlib
+import json
+
 from sqlalchemy import create_engine
 
 from sqlalchemy import (
+    types,
     Table,
     Boolean,
     Column,
     BigInteger,
     Integer,
     Unicode,
+    LargeBinary,
     Text,
     JSON,
     Enum,
@@ -27,6 +32,49 @@ from sqlalchemy.orm import (
 
 
 Base = declarative_base()
+
+
+
+class CompressedText(types.TypeDecorator):
+    '''Compresses Unicode text'''
+
+    impl = types.LargeBinary
+
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        return zlib.compress(value.encode('utf-8'))
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return zlib.decompress(value).decode('utf-8')
+
+    def copy(self, **kw):
+        return CompressedText(self.impl.length)
+
+
+class CompressedJSON(types.TypeDecorator):
+    '''Compresses JSON'''
+
+    impl = types.LargeBinary
+
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        return zlib.compress(json.dumps(value).encode('utf-8'))
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return json.loads(zlib.decompress(value).decode('utf-8'))
+
+    def copy(self, **kw):
+        return CompressedJSON(self.impl.length)
 
 
 class Channel(Base):
@@ -150,7 +198,7 @@ class BuildArtifact(Base):
     conda_env_version = Column(Unicode, nullable=True)
     conda_private = Column(Boolean)
     conda_version = Column(Unicode)
-    description = Column(Unicode, nullable=True)
+    description = Column(CompressedText, nullable=True)
     dev_url = Column(Unicode, nullable=True)
     doc_url = Column(Unicode, nullable=True)
     doc_source_url = Column(Unicode, nullable=True)
@@ -173,10 +221,10 @@ class BuildArtifact(Base):
 
     root_pkgs = Column(JSON)
 
-    summary = Column(Unicode, nullable=True)
-    tags = Column(JSON)
+    summary = Column(CompressedText, nullable=True)
+    tags = Column(CompressedJSON)
 
-    conda_build_config = Column(JSON)
+    conda_build_config = Column(CompressedJSON)
 
     files = relationship(INodeMetadata)
 
@@ -186,8 +234,8 @@ class BuildArtifact(Base):
     metadata_version = Column(Integer)
 
     name = Column(Unicode)
-    raw_recipe = Column(Unicode)
-    rendered_recipe = Column(JSON)
+    raw_recipe = Column(CompressedText)
+    rendered_recipe = Column(CompressedJSON)
     version = Column(Unicode)
 
 
