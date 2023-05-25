@@ -41,6 +41,7 @@ class BuildArtifactIndex(Base):
     depends: list[str] = []
     constrains: list[str] = []
     features: str = None
+    track_features: str = None # ignored currently
     license: str = None
     license_family: str = None
     name: str
@@ -55,7 +56,6 @@ class BuildArtifact(Base):
     about: BuildArtifactAbout
     conda_build_config: typing.Any
     conda_pkg_format: str = None # ignored currently
-    track_features: str = None # ignored currently
     files: list[str]
     index: BuildArtifactIndex
     metadata_version: int
