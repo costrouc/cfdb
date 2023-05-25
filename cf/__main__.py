@@ -1,6 +1,7 @@
 import pathlib
 import json
 import functools
+import sys
 
 from cf import orm, schema
 
@@ -166,7 +167,9 @@ if __name__ == "__main__":
     total_size = 0
     database_size = 0
 
-    for i, path in enumerate(pathlib.Path(".").glob("*/artifacts/*/*/*/*.json")):
+    directory = sys.argv[1]
+
+    for i, path in enumerate(pathlib.Path(directory).glob("artifacts/*/*/*/*.json")):
         if i > 1000:
             break
 

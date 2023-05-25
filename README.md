@@ -23,12 +23,12 @@ SQLITE_SCHEMA..................................... 1            0.027%
 
 # Usage
 
-1. Download the latest of https://github.com/regro/libcfgraph as a
-zip/tar.gz. Note this is on the order of GBs.
+1. Download the latest of https://github.com/regro/libcfgraph to
+`<directory>` as a git repository with a shallow clone `git clone
+--depth=0 ...`. Note this is on the order of 50 GBs and git cloneing
+is significantly faster than downloading the zip.
 
-2. Unpack the archive in the current directory.
-
-3. Run `python -m cf`
+2. Run `python -m cf <directory>`
 
 A database named `database.sqlite` will be created in the current
 directory. Currently if you `du -sh artifacts` the database will be
