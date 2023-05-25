@@ -32,7 +32,7 @@ is significantly faster than downloading the zip.
 
 A database named `database.sqlite` will be created in the current
 directory. Currently if you `du -sh artifacts` the database will be
-around 70-80% of that size.
+around 60-65% of that size.
 
 
 

@@ -3,8 +3,9 @@ import json
 import functools
 import sys
 
-from cf import orm, schema
+from tqdm import tqdm
 
+from cf import orm, schema
 
 
 def store_build_artifact(session, build_artifact_channel: str, build_artifact: schema.BuildArtifact):
@@ -169,7 +170,7 @@ if __name__ == "__main__":
 
     directory = sys.argv[1]
 
-    for i, path in enumerate(pathlib.Path(directory).glob("artifacts/*/*/*/*.json")):
+    for i, path in tqdm(enumerate(pathlib.Path(directory).glob("artifacts/*/*/*/*.json"))):
         package_name, channel, subdir, filename = path.parts[-4:]
 
         total_size += path.stat().st_size
