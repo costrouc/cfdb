@@ -78,7 +78,7 @@ def ensure_filename(session, filename: str):
 
 
 def store_build_artifact(session, build_artifact_channel: str, build_artifact: schema.BuildArtifact):
-    build_artifact_channel_model = ensure_channel(build_artifact_channel)
+    build_artifact_channel_model = ensure_channel(session, build_artifact_channel)
 
     if session.query(orm.BuildArtifact).join(
         orm.BuildArtifact.index
@@ -94,17 +94,17 @@ def store_build_artifact(session, build_artifact_channel: str, build_artifact: s
 
     channels = []
     for channel in build_artifact.about.channels:
-        channels.append(ensure_channel(channel))
+        channels.append(ensure_channel(session, channel))
 
-    license_id = ensure_license(build_artifact.about.license)
+    license_id = ensure_license(session, build_artifact.about.license)
 
     maintainers = []
     for maintainer in build_artifact.about.recipe_maintainers:
-        maintainers.append(ensure_maintainer(maintainer))
+        maintainers.append(ensure_maintainer(session, maintainer))
 
     env_vars = []
     for key, value in build_artifact.about.env_vars.items():
-        env_vars.append(ensure_environment_variable(key, value))
+        env_vars.append(ensure_environment_variable(session, key, value))
 
     build_artifact_index = orm.BuildArtifactIndex(
         arch=build_artifact.index.arch,
@@ -162,7 +162,7 @@ def store_build_artifact(session, build_artifact_channel: str, build_artifact: s
 
     filenames = []
     for filename in build_artifact.files:
-        inode_id = ensure_filename(filename)
+        inode_id = ensure_filename(session, filename)
         inodemetadata = orm.INodeMetadata(inode_id=inode_id, buildartifact_id=build_artifact_model.id)
         session.add(inodemetadata)
     session.commit()
