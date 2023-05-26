@@ -45,7 +45,7 @@ def ensure_maintainer(maintainer_name: str):
 
 @functools.cache
 def ensure_environment_variable(key: str, value: str):
-    env_var = session.query(orm.EnvironmentVariable).filter(
+    env_var = SESSION.query(orm.EnvironmentVariable).filter(
         orm.EnvironmentVariable.key == key,
         orm.EnvironmentVariable.value == value
     ).first()
@@ -58,7 +58,7 @@ def ensure_environment_variable(key: str, value: str):
 
 @functools.cache
 def ensure_inode(name: str, parent_id: int):
-    inode = session.query(orm.INode).filter(
+    inode = SESSION.query(orm.INode).filter(
         orm.INode.parent_id == parent_id,
         orm.INode.name == name
     ).first()
