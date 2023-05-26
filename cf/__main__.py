@@ -9,56 +9,52 @@ from tqdm import tqdm
 from cf import orm, schema
 
 
-DATABASE_FILENAME = os.environ.get('DATABASE_URL', 'database.sqlite')
-SESSION = orm.new_session_factory(url=f"sqlite:///{DATABASE_FILENAME}")
-
-
 @functools.cache
-def ensure_channel(channel_name: str):
-    channel = SESSION.query(orm.Channel).filter(orm.Channel.name == channel_name).first()
+def ensure_channel(session, channel_name: str):
+    channel = session.query(orm.Channel).filter(orm.Channel.name == channel_name).first()
     if channel is None:
         channel = orm.Channel(name=channel_name)
-        SESSION.add(channel)
-        SESSION.commit()
+        session.add(channel)
+        session.commit()
     return channel
 
 
 @functools.cache
-def ensure_license(license_name: str):
-    license = SESSION.query(orm.License).filter(orm.License.name == license_name).first()
+def ensure_license(session, license_name: str):
+    license = session.query(orm.License).filter(orm.License.name == license_name).first()
     if license is None:
         license = orm.License(name=license_name)
-        SESSION.add(license)
-        SESSION.commit()
+        session.add(license)
+        session.commit()
     return license.id
 
 
 @functools.cache
-def ensure_maintainer(maintainer_name: str):
-    maintainer = SESSION.query(orm.Maintainer).filter(orm.Maintainer.name == maintainer_name).first()
+def ensure_maintainer(session, maintainer_name: str):
+    maintainer = session.query(orm.Maintainer).filter(orm.Maintainer.name == maintainer_name).first()
     if maintainer is None:
         maintainer = orm.Maintainer(github=maintainer_name)
-        SESSION.add(maintainer)
-        SESSION.commit()
+        session.add(maintainer)
+        session.commit()
     return maintainer
 
 
 @functools.cache
-def ensure_environment_variable(key: str, value: str):
-    env_var = SESSION.query(orm.EnvironmentVariable).filter(
+def ensure_environment_variable(session, key: str, value: str):
+    env_var = session.query(orm.EnvironmentVariable).filter(
         orm.EnvironmentVariable.key == key,
         orm.EnvironmentVariable.value == value
     ).first()
     if env_var is None:
         env_var = orm.EnvironmentVariable(key=key, value=value)
-        SESSION.add(env_var)
-        SESSION.commit()
+        session.add(env_var)
+        session.commit()
     return env_var
 
 
 @functools.cache
-def ensure_inode(name: str, parent_id: int):
-    inode = SESSION.query(orm.INode).filter(
+def ensure_inode(session, name: str, parent_id: int):
+    inode = session.query(orm.INode).filter(
         orm.INode.parent_id == parent_id,
         orm.INode.name == name
     ).first()
@@ -67,24 +63,24 @@ def ensure_inode(name: str, parent_id: int):
             parent_id=parent_id,
             name=name
         )
-        SESSION.add(inode)
-        SESSION.commit()
+        session.add(inode)
+        session.commit()
     return inode.id
 
 
 @functools.cache
-def ensure_filename(filename: str):
+def ensure_filename(session, filename: str):
     path = pathlib.Path(filename)
     parent_id = None
     for name in path.parts:
-        parent_id = ensure_inode(name=name, parent_id=parent_id)
+        parent_id = ensure_inode(session, name=name, parent_id=parent_id)
     return parent_id
 
 
-def store_build_artifact(build_artifact_channel: str, build_artifact: schema.BuildArtifact):
+def store_build_artifact(session, build_artifact_channel: str, build_artifact: schema.BuildArtifact):
     build_artifact_channel_model = ensure_channel(build_artifact_channel)
 
-    if SESSION.query(orm.BuildArtifact).join(
+    if session.query(orm.BuildArtifact).join(
         orm.BuildArtifact.index
     ).filter(
         orm.BuildArtifact.channel_id == build_artifact_channel_model.id,
@@ -126,8 +122,8 @@ def store_build_artifact(build_artifact_channel: str, build_artifact: schema.Bui
         timestamp=build_artifact.index.timestamp,
         version=build_artifact.index.version,
     )
-    SESSION.add(build_artifact_index)
-    SESSION.commit()
+    session.add(build_artifact_index)
+    session.commit()
 
     build_artifact_model = orm.BuildArtifact(
         channel=build_artifact_channel_model,
@@ -161,20 +157,23 @@ def store_build_artifact(build_artifact_channel: str, build_artifact: schema.Bui
         rendered_recipe=build_artifact.rendered_recipe,
         version=build_artifact.version,
     )
-    SESSION.add(build_artifact_model)
-    SESSION.commit()
+    session.add(build_artifact_model)
+    session.commit()
 
     filenames = []
     for filename in build_artifact.files:
         inode_id = ensure_filename(filename)
         inodemetadata = orm.INodeMetadata(inode_id=inode_id, buildartifact_id=build_artifact_model.id)
-        SESSION.add(inodemetadata)
-    SESSION.commit()
+        session.add(inodemetadata)
+    session.commit()
 
 
 if __name__ == "__main__":
     total_size = 0
     database_size = 0
+
+    database_filename = os.environ.get('DATABASE_URL', 'database.sqlite')
+    session = orm.new_session_factory(url=f"sqlite:///{database_filename}")
 
     directory = sys.argv[1]
 
@@ -183,12 +182,12 @@ if __name__ == "__main__":
         package_name, channel, subdir, filename = path.parts[-4:]
 
         total_size += path.stat().st_size
-        database_size = pathlib.Path(DATABASE_FILENAME).stat().st_size
+        database_size = pathlib.Path(database_filename).stat().st_size
 
         paths.set_description(f'Efficiency {database_size / total_size:0.2f} [%] Database {database_size // 1024**2} [MB] Files {total_size // 1024**2} [MB]')
         paths.refresh()
 
         with path.open() as f:
             build_artifact = schema.BuildArtifact.parse_obj(json.load(f))
-        store_build_artifact(channel, build_artifact)
+        store_build_artifact(session, channel, build_artifact)
     print(total_size)
