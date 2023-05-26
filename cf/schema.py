@@ -50,10 +50,10 @@ class BuildArtifactIndex(Base):
     subdir: str
     timestamp: int = None
     version: str
-    type: str # ignored currently
-    summary: str # ignored currently
-    icon: str # ignored currently
-    app_entry: str # ignored currently
+    type: str = None # ignored currently
+    summary: str = None # ignored currently
+    icon: str = None # ignored currently
+    app_entry: str  = None # ignored currently
 
 
 class BuildArtifact(Base):
