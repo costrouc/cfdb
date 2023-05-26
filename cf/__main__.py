@@ -1,10 +1,11 @@
+import collections
 import pathlib
 import json
 import functools
 import sys
 import os
 
-from tqdm import tqdm
+import tqdm
 
 from cf import orm, schema
 
@@ -54,7 +55,7 @@ def ensure_environment_variable(session, key: str, value: str):
 
 @functools.cache
 def ensure_inode(session, name: str, parent_id: int):
-    inode = session.query(orm.INode).filter(
+    inode = session.query(orm.INode.id).filter(
         orm.INode.parent_id == parent_id,
         orm.INode.name == name
     ).first()
@@ -168,26 +169,35 @@ def store_build_artifact(session, build_artifact_channel: str, build_artifact: s
     session.commit()
 
 
-if __name__ == "__main__":
-    total_size = 0
-    database_size = 0
-
-    database_filename = os.environ.get('DATABASE_URL', 'database.sqlite')
+def process_files(database_filename: str, paths: list[pathlib.Path]):
     session = orm.new_session_factory(url=f"sqlite:///{database_filename}")
 
-    directory = sys.argv[1]
+    total_size = 0
+    initial_database_size = pathlib.Path(database_filename).stat().st_size
+    database_size = 0
 
-    paths = tqdm(list(pathlib.Path(directory).glob("artifacts/*/*/*/*.json")))
-    for i, path in enumerate(paths):
+    paths = tqdm.tqdm(paths)
+    for path in paths:
         package_name, channel, subdir, filename = path.parts[-4:]
 
-        total_size += path.stat().st_size
         database_size = pathlib.Path(database_filename).stat().st_size
+        total_size += path.stat().st_size
 
-        paths.set_description(f'Efficiency {database_size / total_size:0.2f} [%] Database {database_size // 1024**2} [MB] Files {total_size // 1024**2} [MB]')
+        paths.set_description(f'Efficiency {(database_size - initial_database_size) / total_size:0.2f} [%] Database {(database_size - initial_database_size) // 1024**2} [MB] Files {total_size // 1024**2} [MB]')
         paths.refresh()
 
         with path.open() as f:
             build_artifact = schema.BuildArtifact.parse_obj(json.load(f))
+
         store_build_artifact(session, channel, build_artifact)
-    print(total_size)
+
+
+if __name__ == "__main__":
+    paths_filter = os.environ.get('FILTER', '*/*/*')
+    paths_glob = f'artifacts/{paths_filter}/*.json'
+
+    database_filename = os.environ.get('DATABASE_URL', 'database.sqlite')
+
+    directory = sys.argv[1]
+    paths = list(pathlib.Path(directory).glob(paths_glob))
+    process_files(database_filename, paths)
